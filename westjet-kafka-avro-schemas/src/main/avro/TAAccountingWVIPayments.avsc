@@ -1,0 +1,28 @@
+{
+    "type": "record",
+    "name": "TAAccountingWVIPayments",
+    "namespace": "com.westjet.tiess.avro.models",
+    "fields": [
+    {
+        "name": "dateOfIssue",
+        "type": "string",
+        "doc": "Date of Issue"
+    },
+    {
+        "name": "agentCode",
+        "type": "string",
+        "doc": "Agent Code attributed to transaction"
+    },
+    {
+        "name": "collection",
+        "type": "float",
+        "default": "0.0",
+        "doc": "Amount to collect"
+    },
+    {
+        "name": "commission",
+        "type": "float",
+        "default": "0.0",
+        "doc": "Amount to send"
+    }]
+}

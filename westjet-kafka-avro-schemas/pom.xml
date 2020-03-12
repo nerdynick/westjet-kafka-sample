@@ -1,0 +1,154 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.westjet.kafka</groupId>
+		<artifactId>westjet-kafka-sample</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>westjet-kafka-avro-schemas</artifactId>
+
+	<properties>
+		<avro.version>1.8.1</avro.version>
+		<confluent.version>5.3.1</confluent.version>
+	</properties>
+
+	<dependencies>
+		<!-- Avro Package -->
+		<dependency>
+			<groupId>org.apache.avro</groupId>
+			<artifactId>avro</artifactId>
+			<version>${avro.version}</version>
+		</dependency>
+	</dependencies>
+
+	<pluginRepositories>
+		<!-- Confluent Maven Plugin Repo. Required to use the Confluent Schema 
+			Registry Maven Plugin -->
+		<pluginRepository>
+			<id>confluent</id>
+			<url>https://packages.confluent.io/maven/</url>
+		</pluginRepository>
+	</pluginRepositories>
+
+	<build>
+		<plugins>
+			<!-- Maven Plugin to support extra source directories over the standard 
+				set -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<!-- Set our generated-source dir, that the avro plugin will kick files out to as a source. -->
+								<!-- This allows better linking with Eclipse and other IDEs for finding the Class reference(s) -->
+								<source>${project.basedir}/target/generated-sources</source>
+								
+								<!-- Add our Avro source folder as a source to easy of access within IDEs -->
+								<source>src/main/avro</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Maven Plugin to compile AVSC (Avro) schema files into Java Classes 
+				(Pojos) -->
+			<plugin>
+				<groupId>org.apache.avro</groupId>
+				<artifactId>avro-maven-plugin</artifactId>
+				<version>${avro.version}</version>
+				<configuration>
+					<stringType>String</stringType>
+				</configuration>
+				<executions>
+					<execution>
+						<id>schemas</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>schema</goal>
+							<goal>protocol</goal>
+							<goal>idl-protocol</goal>
+						</goals>
+						<configuration>
+							<sourceDirectory>${project.basedir}/src/main/avro/</sourceDirectory>
+							<outputDirectory>${project.basedir}/target/generated-sources</outputDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Maven Plugin to interact with the Confluent Schema Registry -->
+			<!-- Read more about this plugin here: https://docs.confluent.io/current/schema-registry/develop/maven-plugin.html -->
+			<plugin>
+				<groupId>io.confluent</groupId>
+				<artifactId>kafka-schema-registry-maven-plugin</artifactId>
+				<version>${confluent.version}</version>
+				<configuration>
+					<schemaRegistryUrls>
+						<param>http://schema-registry:8081</param>
+					</schemaRegistryUrls>
+					<outputDirectory>${project.basedir}/src/main/avro/downloaded</outputDirectory>
+					<subjectPatterns>*</subjectPatterns>
+
+					<!-- Associate Schema Registry Subjects to Avro Schemas -->
+					<subjects>
+						<sample-data-value>src/main/avro/TAAccountingWVIPayments.avsc</sample-data-value>
+					</subjects>
+				</configuration>
+				<goals>
+					<goal>test-compatibility</goal> <!-- Goal to verify any schema changes will be compatibility with previous 
+						versions -->
+					<goal>register</goal> <!-- Goal to register new/changed schemas with schema registry subjects -->
+					<goal>download</goal> <!-- Optional: Goal to download schemas from Schema Registry -->
+				</goals>
+			</plugin>
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!-- Plugin to reduce Eclipse and other IDE errors with custom maven 
+					goals -->
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.avro
+										</groupId>
+										<artifactId>
+											avro-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.8.1,)
+										</versionRange>
+										<goals>
+											<goal>schema</goal>
+											<goal>idl-protocol</goal>
+											<goal>protocol</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
